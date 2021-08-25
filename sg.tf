@@ -2,7 +2,7 @@ module "security_group_ALB" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 4.0"
 
-  name_prefix         = "FCS-APP1-CAC1-${var.environment}-ALB-SG-GRAFANA"
+  name_prefix         = "FCS-APP1-CAC1-${var.environment}-"
   description         = "Security group for ALB"
   vpc_id              = data.aws_vpc.default.id
   ingress_cidr_blocks = [var.app_cidr_blocks]
@@ -13,7 +13,7 @@ module "security_group_ec2" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 4.0"
 
-  name_prefix         = "FCS-APP1-CAC1-${var.environment}-SG-GRAFANA"
+  name_prefix         = "FCS-APP1-CAC1-${var.environment}-"
   description         = "Security group for EC2 instance"
   vpc_id              = data.aws_vpc.default.id
   ingress_cidr_blocks = [var.app_cidr_blocks, var.cidr_blocks]
