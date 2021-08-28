@@ -24,7 +24,7 @@ EOF
 
 resource "aws_iam_instance_profile" "grafana-${var.environment}" {
   name_prefix = "FCS-APP1-CAC1-${var.environment}-"
-  role = aws_iam_role.grafana.name
+  role        = aws_iam_role.grafana.name
 }
 
 resource "aws_iam_policy" "grafana-${var.environment}" {

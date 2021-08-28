@@ -36,9 +36,7 @@ resource "aws_network_interface" "this" {
 
 module "ec2_instance" {
  source = "terraform-aws-modules/ec2-instance/aws"
-
- instance_count = 1
-
+ instance_count              = 1
  name_prefix                 = "FCS-APP1-CAC1-${var.environment}-"
  ami                         = data.aws_ami.amazon_linux.id
  instance_type               = var.instance_type
