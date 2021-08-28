@@ -1,89 +1,65 @@
-module "complete_lc" {
-  source  = "terraform-aws-modules/autoscaling/aws"
+#Launch Configuration
 
-  # Autoscaling group
-  name            = "complete-asg-${var.environment}"
-  use_name_prefix = false
-  create_asg = true
+resource "aws_launch_configuration" "grafana" {
+  name_prefix = "FCS-APP1-CAC1-${var.environment}-"
 
-  min_size                  = 1
-  max_size                  = 1
-  desired_capacity          = 1
-  wait_for_capacity_timeout = 0
-  health_check_type         = "EC2"
-  vpc_zone_identifier       = module.vpc.private_subnets
-  service_linked_role_arn   = aws_iam_service_linked_role.autoscaling.arn
-
-  initial_lifecycle_hooks = [
-    {
-      name                 = "ExampleStartupLifeCycleHook"
-      default_result       = "CONTINUE"
-      heartbeat_timeout    = 60
-      lifecycle_transition = "autoscaling:EC2_INSTANCE_LAUNCHING"
-      # This could be a rendered data resource
-      notification_metadata = jsonencode({ "hello" = "world" })
-    },
-    {
-      name                 = "ExampleTerminationLifeCycleHook"
-      default_result       = "CONTINUE"
-      heartbeat_timeout    = 180
-      lifecycle_transition = "autoscaling:EC2_INSTANCE_TERMINATING"
-      # This could be a rendered data resource
-      notification_metadata = jsonencode({ "goodbye" = "world" })
-    }
-  ]
-
-  instance_refresh = {
-    strategy = "Rolling"
-    preferences = {
-      min_healthy_percentage = 50
-    }
-    triggers = ["tag"]
+  image_id = data.aws_ami.amazon_linux.id
+  instance_type = var.instance_type
+  key_name = var.key_name
+  security_groups = [module.security_group_ec2.security_group_id]
+  iam_instance_profile = aws_iam_instance_profile.grafana-${var.environment}.name
+  associate_public_ip_address = "false"
+  
+  lifecycle {
+    create_before_destroy = true
   }
+}
 
-  # Launch configuration
-  lc_name   = "complete-lc-${var.environment}"
-  use_lc    = true
-  create_lc = true
+#Creating Autoscaling Group
+resource "aws_autoscaling_group" "grafana" {
+  name_prefix = "FCS-APP1-CAC1-${var.environment}-"
+  launch_configuration = aws_launch_configuration.grafana.name
+  vpc_zone_identifier = data.aws_subnet_ids.all.ids
+  min_size             = 1
+  desired_capacity     = 2
+  max_size             = 2
+  
+  health_check_type    = "EC2"
+ # load_balancers = [aws_alb.alb.id]
+  target_group_arns = [aws_alb_target_group.grafana.arn]  
+}
 
-  image_id          = data.aws_ami.amazon_linux.id
-  instance_type     = "t3.micro"
-# user_data         = local.user_data
-  ebs_optimized     = true
-  enable_monitoring = true
-
-  iam_instance_profile_arn    = aws_iam_instance_profile.ssm.arn
-  security_groups             = [module.security_group_ALB_id]
-  associate_public_ip_address = true
-
-# spot_price        = "0.014"
-  target_group_arns = module.alb.target_group_arns
-
-  ebs_block_device = [
-    {
-      device_name           = "/dev/xvdz"
-      delete_on_termination = true
-      encrypted             = true
-      volume_type           = "gp2"
-      volume_size           = "8"
-    },
-  ]
-
-  root_block_device = [
-    {
-      delete_on_termination = true
-      encrypted             = true
-      volume_size           = "8"
-      volume_type           = "gp2"
-    },
-  ]
-
-  metadata_options = {
-    http_endpoint               = "enabled"
-    http_tokens                 = "required"
-    http_put_response_hop_limit = 32
+#Target Group creation
+resource "aws_alb_target_group" "grafana" {
+  #count = length(aws_instance.instance)
+  name_prefix     = "FCS-APP1-CAC1-${var.environment}-"
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = data.aws_vpc.default.id
+  stickiness {
+  type = "lb_cookie"
+}
+  tags = {
+    Environment = var.environment
+    Customer = var.customer
+    Application = var.application
   }
+# Alter the destination of the health check to be the login page.
+  health_check {
+    path                = "/api/health"
+    protocol		= "HTTPS"
+    port                = 443
+    interval            = 30
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+  }
+}
 
-#  tags        = local.tags
-#  tags_as_map = local.tags_as_map
+#Attach EC2 to Target Group
+resource "aws_lb_target_group_attachment" "target-group" {
+  count = length(aws_instance.instance)
+  target_group_arn = aws_alb_target_group.grafana.arn
+  target_id = aws_instance.instance[count.index].id
+  port = 443
 }

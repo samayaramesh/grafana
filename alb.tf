@@ -7,8 +7,8 @@ module "alb" {
   load_balancer_type = "application"
 
   vpc_id             = data.aws_vpc.default.id
-  subnet_id          = tolist(data.aws_subnet_ids.all.ids)[0]
-  security_groups    = module.security_group_ALB.security_group_id
+  subnet_id          = data.aws_subnet_ids.all.ids
+  security_groups    = module.security_group_alb.security_group_id
 
   access_logs = {
     bucket = module.s3_bucket_alb_logs_s3_bucket_id

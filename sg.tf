@@ -1,4 +1,4 @@
-module "security_group_ALB" {
+module "security_group_alb" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 4.0"
 
@@ -22,7 +22,7 @@ module "security_group_ec2" {
   computed_ingress_with_source_security_group_id = [
     {
       rule                     = ["http-80-tcp", "https-443-tcp"]
-      source_security_group_id = module.security_group_ALB.security_group_id
+      source_security_group_id = module.security_group_alb.security_group_id
     },
   ]
 
