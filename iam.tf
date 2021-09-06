@@ -1,4 +1,4 @@
-resource "aws_iam_role" "grafana-${var.environment}" {
+resource "aws_iam_role" "grafana" {
   name_prefix = "FCS-APP1-CAC1-${var.environment}-"
 
   assume_role_policy = <<EOF
@@ -22,12 +22,12 @@ EOF
   }
 }
 
-resource "aws_iam_instance_profile" "grafana-${var.environment}" {
+resource "aws_iam_instance_profile" "grafana" {
   name_prefix = "FCS-APP1-CAC1-${var.environment}-"
   role        = aws_iam_role.grafana.name
 }
 
-resource "aws_iam_policy" "grafana-${var.environment}" {
+resource "aws_iam_policy" "grafana" {
   name_prefix = "FCS-APP1-CAC1-${var.environment}-"
 
   policy = <<EOF
@@ -95,16 +95,16 @@ data "aws_iam_policy" "TimestreamReadOnlyAccess" {
 #}
 
 resource "aws_iam_role_policy_attachment" "CloudWatchReadOnlyAccess" {
-  role       = aws_iam_role.grafana-${var.environment}.name
+  role       = aws_iam_role.grafana.name
   policy_arn = data.aws_iam_policy.CloudWatchReadOnlyAccess.arn
 }
 
 resource "aws_iam_role_policy_attachment" "TimestreamReadOnlyAccess" {
-  role       = aws_iam_role.grafana-${var.environment}.name
+  role       = aws_iam_role.grafana.name
   policy_arn = data.aws_iam_policy.TimestreamReadOnlyAccess.arn
 }
 
-resource "aws_iam_role_policy_attachment" "grafana-${var.environment}" {
-  role       = aws_iam_role.grafana-${var.environment}.name
-  policy_arn = aws_iam_policy.grafana-${var.environment}.arn
+resource "aws_iam_role_policy_attachment" "grafana" {
+  role       = aws_iam_role.grafana.name
+  policy_arn = aws_iam_policy.grafana.arn
 }

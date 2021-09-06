@@ -6,7 +6,7 @@ resource "aws_launch_configuration" "grafana" {
   instance_type               = var.instance_type
   key_name                    = var.key_name
   security_groups             = [module.security_group_ec2.security_group_id]
-  iam_instance_profile        = aws_iam_instance_profile.grafana-${var.environment}.name
+  iam_instance_profile        = aws_iam_instance_profile.grafana.name
   associate_public_ip_address = "false"
   
   lifecycle {
@@ -39,8 +39,6 @@ resource "aws_alb_target_group" "grafana" {
 }
   tags = {
     Environment = var.environment
-    Customer = var.customer
-    Application = var.application
   }
 # Alter the destination of the health check to be the login page.
   health_check {
@@ -56,8 +54,8 @@ resource "aws_alb_target_group" "grafana" {
 
 #Attach EC2 to Target Group
 resource "aws_lb_target_group_attachment" "target-group" {
-  count                       = length(aws_instance.instance)
+  count                       = length(module.ec2_instance.id)
   target_group_arn            = aws_alb_target_group.grafana.arn
-  target_id                   = aws_instance.instance[count.index].id
+  target_id                   = module.ec2_instance.id
   port                        = 443
 }
