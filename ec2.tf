@@ -1,11 +1,3 @@
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_subnet_ids" "all" {
-  vpc_id = data.aws_vpc.default.id
-}
-
 data "aws_ami" "amazon_linux" {
   most_recent = true
 
@@ -15,7 +7,7 @@ data "aws_ami" "amazon_linux" {
     name = "name"
 
     values = [
-      "amzn-ami-hvm-*-x86_64-gp2",
+      "amzn2-ami-hvm-*-x86_64-gp2",
     ]
   }
 
@@ -28,21 +20,32 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-resource "aws_network_interface" "this" {
- count = 1
+# resource "aws_network_interface" "this" {
+#  count = 1
 
- subnet_id = tolist(data.aws_subnet_ids.all.ids)[count.index]
-}
+#  subnet_id = tolist(data.aws_subnet_ids.all.ids)[count.index]
+# }
 
 module "ec2_instance" {
  source = "terraform-aws-modules/ec2-instance/aws"
- instance_count              = 1
- name_prefix                 = "FCS-APP1-CAC1-${var.environment}-"
+ name                        = "FCS-APP1-CAC1-${var.environment}"
  ami                         = data.aws_ami.amazon_linux.id
- instance_type               = var.instance_type
+ instance_type              = var.instance_type
+#  instance_count              = var.instance_count
  cpu_credits                 = "unlimited"
- vpc_id                      = data.aws_vpc.default.id
- subnet_id                   = tolist(data.aws_subnet_ids.all.ids)[0]
+#  subnet_id                   = var.subnet_ids
  vpc_security_group_ids      = [module.security_group_ec2.security_group_id]
+ iam_instance_profile        = aws_iam_instance_profile.grafana.name
  associate_public_ip_address = false
+}
+
+data "cloudinit_config" "conf" {
+  gzip = false
+  base64_encode = true
+
+  part {
+    content_type = "text/x-shellscript"
+    content = "baz"
+    filename = "entry-script.sh"
+  }
 }
