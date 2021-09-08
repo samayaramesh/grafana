@@ -18,7 +18,7 @@ resource "aws_launch_configuration" "grafana" {
 resource "aws_autoscaling_group" "grafana" {
   name_prefix                 = "FCS-APP1-CAC1-${var.environment}-"
   launch_configuration        = aws_launch_configuration.grafana.name
-  vpc_zone_identifier         = data.aws_subnet_ids.all.ids
+  vpc_zone_identifier         = var.subnet_ids
   min_size                    = 1
   desired_capacity            = 2
   max_size                    = 2
@@ -30,10 +30,10 @@ resource "aws_autoscaling_group" "grafana" {
 #Target Group creation
 resource "aws_alb_target_group" "grafana" {
   #count = length(aws_instance.instance)
-  name_prefix                 = "FCS-APP1-CAC1-${var.environment}-"
+  # name_prefix                 = "FCS-APP1-CAC1-${var.environment}-"
   port                        = 443
   protocol                    = "HTTPS"
-  vpc_id                      = data.aws_vpc.default.id
+  vpc_id                      = var.cidr_blocks
   stickiness {
   type = "lb_cookie"
 }
@@ -54,7 +54,6 @@ resource "aws_alb_target_group" "grafana" {
 
 #Attach EC2 to Target Group
 resource "aws_lb_target_group_attachment" "target-group" {
-  count                       = length(module.ec2_instance.id)
   target_group_arn            = aws_alb_target_group.grafana.arn
   target_id                   = module.ec2_instance.id
   port                        = 443

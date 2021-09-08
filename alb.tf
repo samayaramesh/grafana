@@ -1,18 +1,18 @@
 module "alb" {
   source               = "terraform-aws-modules/alb/aws"
   version              = "~> 6.0"
-  name_prefix          = "FCS-APP1-CAC1-${var.environment}-"
+  # name_prefix          = "FCS-APP1-CAC1-"
   load_balancer_type   = "application"
-  vpc_id               = data.aws_vpc.default.id
+  vpc_id               = var.cidr_blocks
 #   subnet_id            = data.aws_subnet_ids.all.ids
-  security_groups      = module.security_group_alb.security_group_id
+  security_groups      = [module.security_group_alb.security_group_id]
   access_logs = {
     bucket             = module.s3_bucket_alb_logs.s3_bucket_id
   }
 
   target_groups = [
     {
-      name_prefix      = "FCS-APP1-CAC1-${var.environment}-"
+      # name_prefix      = "FCS-APP1-CAC1-"
       backend_protocol = "HTTP"
       backend_port     = 3000
       target_type      = "instance"

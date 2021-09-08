@@ -9,3 +9,7 @@ variable "instance_count" {}
 # variable "private_key" {}
 variable "key_name" {}
 variable "region" {}
+variable "subnet_ids" {
+  type        = list(string)
+  default     = []
+}

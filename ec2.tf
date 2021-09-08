@@ -1,11 +1,3 @@
-data "aws_vpc" "default" {
-  default = var.cidr_blocks
-}
-
-data "aws_subnet_ids" "all" {
-  vpc_id = data.aws_vpc.default.id
-}
-
 data "aws_ami" "amazon_linux" {
   most_recent = true
 
@@ -15,7 +7,7 @@ data "aws_ami" "amazon_linux" {
     name = "name"
 
     values = [
-      "amzn-ami-hvm-*-x86_64-gp2",
+      "amzn2-ami-hvm-*-x86_64-gp2",
     ]
   }
 
@@ -41,7 +33,18 @@ module "ec2_instance" {
  instance_type              = var.instance_type
 #  instance_count              = var.instance_count
  cpu_credits                 = "unlimited"
- subnet_id                   = data.aws_subnet_ids.all.ids
+#  subnet_id                   = var.subnet_ids
  vpc_security_group_ids      = [module.security_group_ec2.security_group_id]
  associate_public_ip_address = false
+}
+
+data "cloudinit_config" "conf" {
+  gzip = false
+  base64_encode = true
+
+  part {
+    content_type = "text/x-shellscript"
+    content = "baz"
+    filename = "entry-script.sh"
+  }
 }
