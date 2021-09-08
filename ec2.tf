@@ -35,6 +35,7 @@ module "ec2_instance" {
  cpu_credits                 = "unlimited"
 #  subnet_id                   = var.subnet_ids
  vpc_security_group_ids      = [module.security_group_ec2.security_group_id]
+ iam_instance_profile        = aws_iam_instance_profile.grafana.name
  associate_public_ip_address = false
 }
 
